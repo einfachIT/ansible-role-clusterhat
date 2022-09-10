@@ -1,0 +1,19 @@
+galaxy_info:
+  role_name: clusterhat
+  namespace: bassinator
+  author: bassinator
+  description: setup clusterhat
+  company: einfach IT
+
+  license: GNU GPLv3
+
+  min_ansible_version: "2.4"
+
+  platforms:
+    - name: Debian
+      release:
+        - 'buster'
+
+  galaxy_tags: [raspberry, clusterhat, clusterctrl]
+
+dependencies: []

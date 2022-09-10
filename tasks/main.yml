@@ -1,0 +1,117 @@
+---
+
+- name: install software packages
+  ansible.builtin.apt:
+    name:
+      - rpiboot
+      - bridge-utils
+      - screen
+      - minicom
+      - git
+      - libusb-1.0-0-dev
+      - nfs-kernel-server
+      - busybox
+      - initramfs-tools-core
+      - python3-smbus
+      - python3-usb
+      - python3-libusb1
+    update_cache: true
+    state: present
+  become: true
+  notify: reconfigure cluster
+
+- name: preseed iptables installation answers
+  ansible.builtin.debconf:
+    name: iptables-persistent
+    question: "{{ item.question }}"
+    value: "{{ item.answer }}"
+    vtype: boolean
+  with_items:
+    - { question: 'iptables-persistent/autosave_v4', answer: 'false' }
+    - { question: 'iptables-persistent/autosave_v6', answer: 'false' }
+
+- name: install iptables
+  ansible.builtin.apt:
+    name: iptables-persistent
+  environment:
+    APT_LISTCHANGES_FRONTEND: none
+
+- name: copy configurations
+  ansible.builtin.copy:
+    src: "{{ item.source }}"
+    dest: "{{ item.destination }}"
+    owner: root
+    group: root
+    mode: 'preserve'
+  with_items:
+    - { source: 'etc/', destination: '/etc' }
+    - { source: 'usr/', destination: '/usr' }
+  notify: reconfigure cluster
+
+- name: enable i2c interface
+  ansible.builtin.lineinfile:
+    dest: /boot/config.txt
+    regexp: '#dtparam=i2c_arm'
+    line: 'dtparam=i2c_arm=on'
+    mode: '0664'
+    create: true
+  with_items:
+    - { line: 'dtoverlay=dwc2,dr_mode=peripheral', regexp: '#dtoverlay=dwc2' }
+    - { line: 'dtparam=i2c_arm=on', regexp: '#dtparam=i2c_arm' }
+  notify: reconfigure cluster
+
+- name: some security configs
+  ansible.builtin.lineinfile:
+    dest: "{{ item.destination }}"
+    line: "{{ item.line }}"
+  with_items:
+    - { line: 'mountd: 172.19.180.\nrpcbind: 172.19.180.\n', destination: '/etc/hosts.allow' }
+    - { line: 'mountd: ALL\nrpcbind: ALL\n', destination: '/etc/hosts.deny' }
+  notify: reconfigure cluster
+
+- name: create directories needed for network boot of the cluster nodes
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    mode: '0755'
+  with_items:
+    - /var/lib/clusterctrl/boot
+    - /var/lib/clusterctrl/nfs/p1
+    - /var/lib/clusterctrl/nfs/p2
+    - /var/lib/clusterctrl/nfs/p3
+    - /var/lib/clusterctrl/nfs/p4
+  notify: reconfigure cluster
+
+- name: set bootcode for network boot
+  ansible.builtin.file:
+    src: /boot/bootcode.bin
+    dest: /var/lib/clusterctrl/boot/bootcode.bin
+    force: true
+    state: link
+    mode: '0755'
+  notify: reconfigure cluster
+
+- name: configure services
+  ansible.builtin.service:
+    name: "{{ item.name }}"
+    enabled: "{{ item.enabled }}"
+  with_items:
+    - { name: clusterctrl-init, enabled: true }
+    - { name: clusterctrl-rpiboot, enabled: true }
+    - { name: nfs-kernel-server, enabled: false }
+  register: result
+  failed_when: fail_on_service_errors | default(result.failed) # does not work on ci docker container
+  notify: reconfigure cluster
+
+- name: Clean unwanted olderstuff
+  ansible.builtin.apt:
+    autoremove: true
+    purge: true
+
+- name: Flush handlers
+  ansible.builtin.meta: flush_handlers
+
+- name: Wait 600 seconds, but only start checking after 60 seconds
+  ansible.builtin.wait_for_connection:
+    delay: 60
+    timeout: 600

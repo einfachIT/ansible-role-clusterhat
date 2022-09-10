@@ -1,0 +1,8 @@
+---
+
+- name: reconfigure cluster
+  ansible.builtin.command:
+    cmd: 'reconfig-clusterctrl cbridge'
+  async: 45
+  poll: 0
+  changed_when: true
