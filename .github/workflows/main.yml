@@ -1,0 +1,24 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI Test
+
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: 0 0 * * *
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: [self-hosted, linux, arm] 
+    steps:
+      - uses: actions/checkout@v2
+          
+      - name: Run molecule tests
+        run: |
+          source source.me
+          molecule test -s int
