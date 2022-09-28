@@ -1,5 +1,5 @@
 ---
-- name: decommission raspberries
+- name: Decommission raspberries
   hosts: raspberries
   ignore_unreachable: true
   become: true
@@ -15,6 +15,7 @@
       - remove hostname from known_hosts
       - set new ansible_hostname
       - wait to reboot after restore
+    ignore_unreachable: true
 
   handlers:
 
