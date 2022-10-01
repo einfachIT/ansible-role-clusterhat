@@ -4,4 +4,4 @@
   tasks:
     - name: "Include bassinator.clusterhat"
       ansible.builtin.include_role:
-        name: "bassinator.clusterhat"
+        name: "einfachit.clusterhat"

@@ -12,7 +12,7 @@ galaxy_info:
   platforms:
     - name: Debian
       release:
-        - 'buster'
+        - 'bullseye'
 
   galaxy_tags: [raspberry, clusterhat, clusterctrl]
 
