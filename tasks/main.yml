@@ -1,6 +1,6 @@
 ---
 
-- name: install software packages
+- name: Install software packages
   ansible.builtin.apt:
     name:
       - rpiboot
@@ -20,7 +20,7 @@
   become: true
   notify: reconfigure cluster
 
-- name: preseed iptables installation answers
+- name: Preseed iptables installation answers
   ansible.builtin.debconf:
     name: iptables-persistent
     question: "{{ item.question }}"
@@ -30,13 +30,13 @@
     - { question: 'iptables-persistent/autosave_v4', answer: 'false' }
     - { question: 'iptables-persistent/autosave_v6', answer: 'false' }
 
-- name: install iptables
+- name: Install iptables
   ansible.builtin.apt:
     name: iptables-persistent
   environment:
     APT_LISTCHANGES_FRONTEND: none
 
-- name: copy configurations
+- name: Copy configurations
   ansible.builtin.copy:
     src: "{{ item.source }}"
     dest: "{{ item.destination }}"
@@ -48,7 +48,7 @@
     - { source: 'usr/', destination: '/usr' }
   notify: reconfigure cluster
 
-- name: enable i2c interface
+- name: Enable i2c interface
   ansible.builtin.lineinfile:
     dest: /boot/config.txt
     regexp: '#dtparam=i2c_arm'
@@ -60,7 +60,7 @@
     - { line: 'dtparam=i2c_arm=on', regexp: '#dtparam=i2c_arm' }
   notify: reconfigure cluster
 
-- name: some security configs
+- name: Some security configs
   ansible.builtin.lineinfile:
     dest: "{{ item.destination }}"
     line: "{{ item.line }}"
@@ -69,7 +69,7 @@
     - { line: 'mountd: ALL\nrpcbind: ALL\n', destination: '/etc/hosts.deny' }
   notify: reconfigure cluster
 
-- name: create directories needed for network boot of the cluster nodes
+- name: Create directories needed for network boot of the cluster nodes
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -82,7 +82,7 @@
     - /var/lib/clusterctrl/nfs/p4
   notify: reconfigure cluster
 
-- name: set bootcode for network boot
+- name: Set bootcode for network boot
   ansible.builtin.file:
     src: /boot/bootcode.bin
     dest: /var/lib/clusterctrl/boot/bootcode.bin
@@ -91,7 +91,7 @@
     mode: '0755'
   notify: reconfigure cluster
 
-- name: configure services
+- name: Configure services
   ansible.builtin.service:
     name: "{{ item.name }}"
     enabled: "{{ item.enabled }}"

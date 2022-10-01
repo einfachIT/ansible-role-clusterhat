@@ -7,16 +7,16 @@
   gather_facts: false
   tasks:
 
-  - name: turn all nodes on
+  - name: Turn all nodes on
     ansible.builtin.command: clusterctrl on
     changed_when: true
 
-  - name: get clusterctrl status
+  - name: Get clusterctrl status
     ansible.builtin.command: clusterctrl status
     register: ctrl_state
     changed_when: false
 
-  - name: check all nodes on
+  - name: Check all nodes on
     ansible.builtin.assert:
       that:
         - '"p1:1" in ctrl_state.stdout_lines'
@@ -25,16 +25,16 @@
         - '"p4:1" in ctrl_state.stdout_lines'
       success_msg: "all nodes on"
 
-  - name: turn all nodes off
+  - name: Turn all nodes off
     ansible.builtin.command: clusterctrl off
     changed_when: true
 
-  - name: get clusterctrl status
+  - name: Get clusterctrl status
     ansible.builtin.command: clusterctrl status
     register: ctrl_state
     changed_when: false
 
-  - name: check all nodes down
+  - name: Check all nodes down
     ansible.builtin.assert:
       that:
         - '"p1:0" in ctrl_state.stdout_lines'

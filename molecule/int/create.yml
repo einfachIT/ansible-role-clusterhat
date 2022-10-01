@@ -1,15 +1,15 @@
 ---
-- name: provision raspberries
+- name: Provision raspberries
   hosts: raspberries
   become: true
   gather_facts: false
 
   pre_tasks:
 
-    - name: set ansible hostname to raw_hostname
+    - name: Set ansible hostname to raw_hostname
       ansible.builtin.set_fact: ansible_host="{{ raw_hostname }}.local"
 
-    - name: update apt cache with sudo apt-get --allow-releaseinfo-change update
+    - name: Update apt cache with sudo apt-get --allow-releaseinfo-change update
       ansible.builtin.command: sudo apt-get --allow-releaseinfo-change update
       changed_when: false
 
@@ -35,7 +35,7 @@
     - name: Gathering facts
       ansible.builtin.setup:
 
-    - name: remove entry from known_hosts (initial hostname and ip adress)
+    - name: Remove entry from known_hosts (initial hostname and ip adress)
       ansible.builtin.known_hosts:
         name: "{{ ansible_host }}"
         path: ~/.ssh/known_hosts
@@ -45,7 +45,7 @@
       become: false
       changed_when: false
 
-    - name: set ansible hostname to ip address
+    - name: Set ansible hostname to ip address
       ansible.builtin.set_fact: ansible_host="{{ ansible_default_ipv4.address }}"
 
     - name: Set a hostname
@@ -53,7 +53,7 @@
         name: "{{ hostname }}"
         use: systemd
 
-    - name: update /etc/hosts
+    - name: Update /etc/hosts
       ansible.builtin.lineinfile:
         path: /etc/hosts
         regexp: '^127\.0\.0\.1'
@@ -62,13 +62,13 @@
         group: root
         mode: '0644'
 
-    - name: reboot server
+    - name: Reboot server
       ansible.builtin.command: reboot
       async: 100
       poll: 0
       changed_when: false
 
-    - name: remove entry from known_hosts (ip-address, original hostkey which will change after reboot)
+    - name: Remove entry from known_hosts (ip-address, original hostkey which will change after reboot)
       ansible.builtin.known_hosts:
         name: "{{ ansible_host }}"
         path: ~/.ssh/known_hosts
@@ -78,7 +78,7 @@
       become: false
       changed_when: false
 
-    - name: set ansible hostname to new name
+    - name: Set ansible hostname to new name
       ansible.builtin.set_fact: ansible_host="{{ hostname }}.local"
 
     - name: Wait 600 seconds, but only start checking after 60 seconds
